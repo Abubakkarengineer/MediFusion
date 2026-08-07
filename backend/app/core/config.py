@@ -7,6 +7,7 @@ DATA_DIR = BASE_DIR / "data"
 UPLOADS_DIR = DATA_DIR / "uploads"
 SPEECH_UPLOADS_DIR = UPLOADS_DIR / "speech"
 OCR_UPLOADS_DIR = UPLOADS_DIR / "ocr"
+IMAGE_UPLOADS_DIR = UPLOADS_DIR / "images"
 
 
 class Settings(BaseSettings):
@@ -31,3 +32,4 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 SPEECH_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 OCR_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+IMAGE_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)

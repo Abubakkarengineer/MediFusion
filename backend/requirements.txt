@@ -7,3 +7,4 @@ python-multipart==0.0.9
 faster-whisper==1.2.1
 easyocr==1.7.2
 pymupdf==1.28.2
+transformers==4.44.2

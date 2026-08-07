@@ -29,6 +29,15 @@ FREQUENCY_PATTERNS = [
 
 DOSAGE_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s?(mg|mcg|g|ml|iu)\b", re.IGNORECASE)
 
+# common OCR digit/letter confusions (e.g. "1Omg" for "10mg") -- normalize
+# only inside digit-adjacent tokens right before dosage/unit text, never
+# touching drug names or other words.
+_OCR_DIGIT_CONFUSION = re.compile(r"(?<=\d)[Oo](?=\d|\.|\s?(?:mg|mcg|g|ml|iu)\b)")
+
+
+def _normalize_ocr_digits(text: str) -> str:
+    return _OCR_DIGIT_CONFUSION.sub("0", text)
+
 # test_name -> (low, high, unit) using standard adult reference ranges
 LAB_TEST_LEXICON: dict[str, tuple[float, float, str]] = {
     "hemoglobin": (13.0, 17.0, "g/dL"),
@@ -104,8 +113,8 @@ def extract_lab_values(text: str) -> list[dict]:
     results = []
     lowered = text.lower()
     for test_name in LAB_TEST_LEXICON:
-        for match in re.finditer(re.escape(test_name), lowered):
-            window = text[match.end():match.end() + 25]
+        for match in re.finditer(rf"\b{re.escape(test_name)}\b", lowered):
+            window = _normalize_ocr_digits(text[match.end():match.end() + 25])
             number_match = re.search(r"(\d+\.?\d*)", window)
             if not number_match:
                 continue
@@ -141,15 +150,15 @@ def extract_medicines(text: str) -> list[dict]:
     # dosage/frequency phrase when OCR merges multiple lines into one block.
     matches = []
     for med in MEDICINE_LEXICON:
-        idx = lowered.find(med)
-        if idx != -1:
-            matches.append((idx, med))
+        med_match = re.search(rf"\b{re.escape(med)}\b", lowered)
+        if med_match:
+            matches.append((med_match.start(), med))
     matches.sort(key=lambda pair: pair[0])
 
     results = []
     for i, (idx, med) in enumerate(matches):
         window_end = matches[i + 1][0] if i + 1 < len(matches) else min(idx + 80, len(text))
-        window = text[idx:window_end]
+        window = _normalize_ocr_digits(text[idx:window_end])
 
         dosage_match = DOSAGE_PATTERN.search(window)
         dosage = f"{dosage_match.group(1)}{dosage_match.group(2)}" if dosage_match else None
