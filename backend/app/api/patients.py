@@ -78,6 +78,27 @@ def add_vital(patient_id: int, payload: VitalCreate, db: Session = Depends(get_d
     return vital
 
 
+@router.post("/{patient_id}/vitals/simulate", response_model=list[VitalOut], status_code=201)
+def simulate_vitals(patient_id: int, scenario: str, db: Session = Depends(get_db)):
+    from app.services.vitals_simulation import SCENARIOS, generate_scenario
+
+    _get_patient_or_404(db, patient_id)
+    if scenario not in SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"scenario must be one of {SCENARIOS}")
+
+    readings = generate_scenario(scenario)
+    saved = []
+    for reading in readings:
+        vital = VitalObservation(patient_id=patient_id, source="simulated", **reading)
+        db.add(vital)
+        saved.append(vital)
+    db.commit()
+    for vital in saved:
+        db.refresh(vital)
+    logger.info("Simulated %d vitals (%s) for patient %s", len(saved), scenario, patient_id)
+    return saved
+
+
 @router.get("/{patient_id}/vitals", response_model=list[VitalOut])
 def list_vitals(patient_id: int, db: Session = Depends(get_db)):
     _get_patient_or_404(db, patient_id)
