@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 BASE_DIR = Path(__file__).resolve().parents[3]
 DATA_DIR = BASE_DIR / "data"
 UPLOADS_DIR = DATA_DIR / "uploads"
+SPEECH_UPLOADS_DIR = UPLOADS_DIR / "speech"
 
 
 class Settings(BaseSettings):
@@ -27,3 +28,4 @@ settings = Settings()
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+SPEECH_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)

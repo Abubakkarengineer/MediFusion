@@ -12,14 +12,14 @@ def api_get(path: str, **kwargs):
     return resp.json()
 
 
-def api_post(path: str, **kwargs):
-    resp = requests.post(f"{API_BASE_URL}{path}", timeout=30, **kwargs)
+def api_post(path: str, timeout: int = 30, **kwargs):
+    resp = requests.post(f"{API_BASE_URL}{path}", timeout=timeout, **kwargs)
     resp.raise_for_status()
     return resp.json()
 
 
-def api_put(path: str, **kwargs):
-    resp = requests.put(f"{API_BASE_URL}{path}", timeout=30, **kwargs)
+def api_put(path: str, timeout: int = 30, **kwargs):
+    resp = requests.put(f"{API_BASE_URL}{path}", timeout=timeout, **kwargs)
     resp.raise_for_status()
     return resp.json()
 
