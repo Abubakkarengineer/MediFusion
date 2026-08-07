@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import meta, patients, speech, staff, system
+from app.api import meta, ocr, patients, speech, staff, system
 from app.core.config import settings
 from app.core.logging_config import get_logger, setup_logging
 from app.db import SessionLocal, init_db
@@ -41,3 +41,4 @@ app.include_router(meta.router, prefix="/api")
 app.include_router(patients.router, prefix="/api")
 app.include_router(staff.router, prefix="/api")
 app.include_router(speech.router, prefix="/api")
+app.include_router(ocr.router, prefix="/api")
