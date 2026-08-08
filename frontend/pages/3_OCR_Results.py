@@ -6,7 +6,7 @@ from utils import api_get, api_post, render_page_header
 st.set_page_config(page_title="OCR Results — MediFusion AI", page_icon="🧾", layout="wide")
 render_page_header(
     "🧾 OCR Results",
-    "Prescription / lab report upload → EasyOCR extraction of medicines, lab values, patient info",
+    "Prescription / lab report upload → OCR extraction of medicines, lab values, patient info",
 )
 
 try:
@@ -27,8 +27,8 @@ st.markdown("---")
 st.subheader("Upload a document")
 st.caption(
     "Supported formats: PNG, JPG, BMP, TIFF, WEBP, PDF. Text extraction runs entirely "
-    "on-device with EasyOCR; values are matched against standard lab reference ranges "
-    "for a Low/Normal/High flag only — this does not diagnose any condition."
+    "on-device with Tesseract OCR; values are matched against standard lab reference "
+    "ranges for a Low/Normal/High flag only — this does not diagnose any condition."
 )
 
 document_type = st.radio("Document type", ["Prescription", "Lab Report"], horizontal=True)
@@ -42,7 +42,7 @@ if doc_file is not None:
     if doc_file.type and doc_file.type.startswith("image/"):
         st.image(doc_file, width=300)
     if st.button("Run OCR extraction", type="primary"):
-        with st.spinner("Running EasyOCR... first run downloads detection/recognition models."):
+        with st.spinner("Running OCR..."):
             try:
                 result = api_post(
                     f"/patients/{patient_id}/ocr",
@@ -86,7 +86,11 @@ if doc_file is not None:
 
 st.markdown("---")
 st.subheader("Document history")
-docs = api_get(f"/patients/{patient_id}/ocr")
+try:
+    docs = api_get(f"/patients/{patient_id}/ocr")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load document history: {exc}")
+    st.stop()
 if not docs:
     st.info("No documents uploaded yet for this patient.")
 else:

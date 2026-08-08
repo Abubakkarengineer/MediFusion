@@ -39,15 +39,18 @@ with col1:
         rr = v5.number_input("Resp. rate", 0, 100, 16)
         temperature = v6.number_input("Temp (°C)", 25.0, 45.0, 37.0, step=0.1)
         if st.form_submit_button("Record vital", type="primary"):
-            api_post(
-                f"/patients/{patient_id}/vitals",
-                json={
-                    "heart_rate": heart_rate, "systolic_bp": systolic, "diastolic_bp": diastolic,
-                    "spo2": spo2, "respiratory_rate": rr, "temperature": temperature,
-                },
-            )
-            st.success("Vital recorded.")
-            st.rerun()
+            try:
+                api_post(
+                    f"/patients/{patient_id}/vitals",
+                    json={
+                        "heart_rate": heart_rate, "systolic_bp": systolic, "diastolic_bp": diastolic,
+                        "spo2": spo2, "respiratory_rate": rr, "temperature": temperature,
+                    },
+                )
+                st.success("Vital recorded.")
+                st.rerun()
+            except requests.exceptions.HTTPError as exc:
+                st.error(f"Could not record vital: {exc.response.text}")
 
 with col2:
     st.subheader("Simulate a scenario")
@@ -60,13 +63,20 @@ with col2:
         ["Stable", "Gradual Deterioration", "Recovery", "Cardiac Pattern", "Respiratory Pattern"],
     )
     if st.button("▶ Run simulation", type="primary"):
-        api_post(f"/patients/{patient_id}/vitals/simulate", params={"scenario": scenario})
-        st.success(f"Simulated '{scenario}' scenario — 10 readings added.")
-        st.rerun()
+        try:
+            api_post(f"/patients/{patient_id}/vitals/simulate", params={"scenario": scenario})
+            st.success(f"Simulated '{scenario}' scenario — 10 readings added.")
+            st.rerun()
+        except requests.exceptions.HTTPError as exc:
+            st.error(f"Simulation failed: {exc.response.text}")
 
 st.markdown("---")
 st.subheader("Vitals trend")
-vitals = api_get(f"/patients/{patient_id}/vitals")
+try:
+    vitals = api_get(f"/patients/{patient_id}/vitals")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load vitals: {exc}")
+    st.stop()
 
 if not vitals:
     st.info("No vitals recorded yet for this patient.")

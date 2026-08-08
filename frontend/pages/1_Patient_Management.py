@@ -150,7 +150,11 @@ with tab_details:
         options_map = {f"{p['mrn']} — {p['full_name']}": p["id"] for p in patients}
         selected_label = st.selectbox("Select a patient", list(options_map.keys()))
         patient_id = options_map[selected_label]
-        patient = api_get(f"/patients/{patient_id}")
+        try:
+            patient = api_get(f"/patients/{patient_id}")
+        except requests.exceptions.RequestException as exc:
+            st.error(f"Could not load this patient: {exc}")
+            st.stop()
 
         col1, col2, col3 = st.columns(3)
         col1.metric("MRN", patient["mrn"])
@@ -217,7 +221,11 @@ with tab_details:
                 st.success("Vitals recorded.")
                 st.rerun()
 
-        vitals = api_get(f"/patients/{patient_id}/vitals")
+        try:
+            vitals = api_get(f"/patients/{patient_id}/vitals")
+        except requests.exceptions.RequestException as exc:
+            st.error(f"Could not load vitals history: {exc}")
+            st.stop()
         if vitals:
             vdf = pd.DataFrame(vitals)
             vdf["recorded_at"] = pd.to_datetime(vdf["recorded_at"])

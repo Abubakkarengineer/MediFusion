@@ -61,7 +61,11 @@ if audio_file is not None:
 
 st.markdown("---")
 st.subheader("Speech note history")
-notes = api_get(f"/patients/{patient_id}/speech")
+try:
+    notes = api_get(f"/patients/{patient_id}/speech")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load speech note history: {exc}")
+    st.stop()
 if not notes:
     st.info("No speech notes recorded yet for this patient.")
 else:

@@ -69,13 +69,13 @@ dashboard for a reviewing clinician.
 **Modules** (use the sidebar to navigate):
 1. **Patient Management** — registration, queue, details, vitals, staff assignment
 2. **Speech Analysis** — multilingual Whisper transcription + symptom extraction
-3. **OCR Results** — prescription / lab report extraction (EasyOCR)
+3. **OCR Results** — prescription / lab report extraction (Tesseract)
 4. **Medical Imaging** — X-ray / CT / MRI abnormality flags (demo vision model)
 5. **Live Monitoring** — continuous vitals + simulated scenarios
 6. **Multimodal Patient Profile** — fused view of all data sources
 7. **Risk Prediction** — ML deterioration probability (Logistic Regression / Random Forest)
 8. **Priority & Alerts** — LOW/MODERATE/HIGH/CRITICAL classification + alerts
-9. **Explainable AI** — SHAP-based feature importance and concern routing
+9. **Explainable AI** — per-prediction feature attribution and concern routing
 10. **System Information** — backend health and diagnostics
 
 All data in this demo is synthetic. No real patient information should be

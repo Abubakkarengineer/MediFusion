@@ -70,7 +70,11 @@ if "last_explanation" in st.session_state:
 
 st.markdown("---")
 st.subheader("Alerts for this patient")
-alerts = api_get(f"/patients/{patient_id}/alerts")
+try:
+    alerts = api_get(f"/patients/{patient_id}/alerts")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load alerts: {exc}")
+    st.stop()
 if not alerts:
     st.info("No alerts generated yet. Run an explanation on a HIGH/CRITICAL patient to generate one.")
 else:

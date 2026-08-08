@@ -48,7 +48,11 @@ options_map = {f"{p['mrn']} — {p['full_name']}": p["id"] for p in patients}
 selected_label = st.selectbox("View priority history for", list(options_map.keys()))
 patient_id = options_map[selected_label]
 
-history = api_get(f"/patients/{patient_id}/priority-history")
+try:
+    history = api_get(f"/patients/{patient_id}/priority-history")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load priority history: {exc}")
+    st.stop()
 if not history:
     st.info("No priority transitions recorded yet for this patient. Record vitals or run a simulation to trigger prioritization.")
 else:

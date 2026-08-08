@@ -69,7 +69,11 @@ if "last_prediction" in st.session_state:
 
 st.markdown("---")
 st.subheader("Prediction history")
-preds = api_get(f"/patients/{patient_id}/risk")
+try:
+    preds = api_get(f"/patients/{patient_id}/risk")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load prediction history: {exc}")
+    st.stop()
 if not preds:
     st.info("No predictions run yet for this patient.")
 else:

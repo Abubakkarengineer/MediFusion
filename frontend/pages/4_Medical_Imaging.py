@@ -68,7 +68,11 @@ if image_file is not None:
 
 st.markdown("---")
 st.subheader("Imaging history")
-images = api_get(f"/patients/{patient_id}/images")
+try:
+    images = api_get(f"/patients/{patient_id}/images")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load imaging history: {exc}")
+    st.stop()
 if not images:
     st.info("No images uploaded yet for this patient.")
 else:

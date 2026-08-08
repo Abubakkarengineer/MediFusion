@@ -22,9 +22,21 @@ def _merge_headers(kwargs: dict) -> dict:
     return kwargs
 
 
-def api_get(path: str, **kwargs):
+def _handle_auth_failure(resp: requests.Response) -> None:
+    """A 401 means the session token is missing/expired/invalid. Every page
+    calls api_get/api_post/api_put without expecting to handle that case
+    themselves, so it's handled once, here, instead of crashing with a raw
+    traceback on whichever page happens to be open when a token expires."""
+    if resp.status_code == 401 and is_authenticated():
+        logout()
+        st.warning("🔒 Your session expired. Please log in again from the Home page.")
+        st.stop()
+
+
+def api_get(path: str, timeout: int = 10, **kwargs):
     kwargs = _merge_headers(kwargs)
-    resp = requests.get(f"{API_BASE_URL}{path}", timeout=10, **kwargs)
+    resp = requests.get(f"{API_BASE_URL}{path}", timeout=timeout, **kwargs)
+    _handle_auth_failure(resp)
     resp.raise_for_status()
     return resp.json()
 
@@ -32,6 +44,7 @@ def api_get(path: str, **kwargs):
 def api_post(path: str, timeout: int = 30, **kwargs):
     kwargs = _merge_headers(kwargs)
     resp = requests.post(f"{API_BASE_URL}{path}", timeout=timeout, **kwargs)
+    _handle_auth_failure(resp)
     resp.raise_for_status()
     return resp.json()
 
@@ -39,6 +52,7 @@ def api_post(path: str, timeout: int = 30, **kwargs):
 def api_put(path: str, timeout: int = 30, **kwargs):
     kwargs = _merge_headers(kwargs)
     resp = requests.put(f"{API_BASE_URL}{path}", timeout=timeout, **kwargs)
+    _handle_auth_failure(resp)
     resp.raise_for_status()
     return resp.json()
 

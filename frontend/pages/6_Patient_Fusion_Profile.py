@@ -23,7 +23,11 @@ options_map = {f"{p['mrn']} — {p['full_name']}": p["id"] for p in patients}
 selected_label = st.selectbox("Select a patient", list(options_map.keys()))
 patient_id = options_map[selected_label]
 
-profile = api_get(f"/patients/{patient_id}/profile")
+try:
+    profile = api_get(f"/patients/{patient_id}/profile")
+except requests.exceptions.RequestException as exc:
+    st.error(f"Could not load this patient's profile: {exc}")
+    st.stop()
 p = profile["patient"]
 
 st.markdown("---")
