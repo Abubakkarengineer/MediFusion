@@ -12,7 +12,7 @@ from app.db import get_db
 from app.models.medical_image import MedicalImage
 from app.models.patient import Patient
 from app.schemas.image import MedicalImageOut
-from app.services.image_service import classify_image
+from app.services.image_service import ImagingUnavailableError, classify_image
 
 router = APIRouter(prefix="/patients", tags=["imaging"])
 logger = get_logger(__name__)
@@ -62,6 +62,8 @@ async def upload_medical_image(
 
     try:
         predictions = classify_image(str(saved_path))
+    except ImagingUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Image classification failed for patient %s", patient_id)
         raise HTTPException(status_code=500, detail=f"Image analysis failed: {exc}") from exc

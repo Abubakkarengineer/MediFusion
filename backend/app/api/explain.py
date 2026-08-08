@@ -73,6 +73,7 @@ def explain_patient_risk(patient_id: int, db: Session = Depends(get_db)):
         confidence=latest_pred.confidence,
         model_used=latest_pred.model_used,
         feature_importance=explanation["feature_importance"],
+        method=explanation["method"],
         explanation_text=explanation["explanation_text"],
         concern=routing["concern"],
         department=routing["department"],

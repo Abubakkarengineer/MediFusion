@@ -1,5 +1,4 @@
-import os
-from functools import lru_cache
+import io
 from pathlib import Path
 
 from app.core.logging_config import get_logger
@@ -9,26 +8,13 @@ logger = get_logger(__name__)
 PDF_EXTENSIONS = {".pdf"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".webp"}
 
-# Overridable so model weights land on a persistent disk in production and
-# don't re-download on every restart -- defaults to EasyOCR's usual location.
-EASYOCR_MODEL_DIR = os.environ.get("EASYOCR_MODEL_DIR")
-
-
-@lru_cache(maxsize=1)
-def get_reader():
-    import easyocr
-
-    logger.info("Loading EasyOCR reader (en)...")
-    kwargs = {"model_storage_directory": EASYOCR_MODEL_DIR} if EASYOCR_MODEL_DIR else {}
-    reader = easyocr.Reader(["en"], gpu=False, verbose=False, **kwargs)
-    logger.info("EasyOCR reader loaded.")
-    return reader
-
 
 def _ocr_image_bytes(image_bytes: bytes) -> str:
-    reader = get_reader()
-    results = reader.readtext(image_bytes, detail=0, paragraph=True)
-    return "\n".join(results)
+    import pytesseract
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(image_bytes))
+    return pytesseract.image_to_string(image)
 
 
 def extract_text(file_path: str) -> str:

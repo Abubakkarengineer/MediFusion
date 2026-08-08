@@ -7,7 +7,7 @@ from utils import api_get, api_post, priority_badge, render_page_header
 st.set_page_config(page_title="Explainable AI — MediFusion AI", page_icon="🔍", layout="wide")
 render_page_header(
     "🔍 Explainable AI & Concern Routing",
-    "SHAP feature importance, human-readable explanations, department/nurse/specialist routing",
+    "Per-prediction feature attribution, human-readable explanations, department/nurse/specialist routing",
 )
 
 try:
@@ -36,7 +36,8 @@ if "last_explanation" in st.session_state:
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        st.subheader("SHAP feature contributions")
+        st.subheader("Feature contributions")
+        st.caption(f"Method: {e['method']}")
         df = pd.DataFrame(e["feature_importance"])
         colors = ["#F44336" if c > 0 else "#4CAF50" for c in df["contribution"]]
         fig = go.Figure(go.Bar(

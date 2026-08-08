@@ -2,9 +2,10 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# libgl1/libglib2.0-0: needed at runtime by opencv (pulled in via easyocr)
+# tesseract-ocr: native OCR engine used via pytesseract -- far lighter than
+# a torch-based OCR model, which matters on a memory-constrained instance.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 \
+    tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

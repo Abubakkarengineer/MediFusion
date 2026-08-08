@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 import numpy as np
 
 from app.ml.features import FEATURE_NAMES, vector_from_dict
@@ -16,29 +14,34 @@ FEATURE_LABELS = {
 }
 
 
-@lru_cache(maxsize=1)
-def get_explainer():
-    import shap
+def _feature_contributions(model, x_scaled: np.ndarray) -> tuple[np.ndarray, str]:
+    if hasattr(model, "coef_"):
+        # Linear model: exact per-prediction attribution -- coefficient times
+        # the scaled feature value, relative to an all-zero (population mean)
+        # baseline. This is not an approximation: for a linear model this is
+        # the same value a SHAP linear explainer with a zero baseline would
+        # produce, computed directly without that dependency.
+        coefs = model.coef_[0]
+        return coefs * x_scaled, "Linear coefficient contribution"
 
-    bundle = get_model_bundle()
-    model = bundle["model"]
-    # Baseline of all-zeros in scaled feature space == the training mean,
-    # a standard neutral reference point for a linear-model explainer.
-    background = np.zeros((1, len(FEATURE_NAMES)))
-    explainer = shap.LinearExplainer(model, background)
-    return explainer
+    # Tree ensemble (e.g. Random Forest): sklearn's feature_importances_ is
+    # a *global* measure, not per-prediction. Signing it by how far this
+    # patient's scaled value sits from the population-mean baseline gives a
+    # real, describable per-prediction signal, but it's an approximation --
+    # labeled as such rather than presented as exact SHAP-style attribution.
+    importances = model.feature_importances_
+    return importances * x_scaled, "Feature-importance weighted contribution (approximate)"
 
 
 def explain_prediction(feature_values: dict) -> dict:
     bundle = get_model_bundle()
     scaler = bundle["scaler"]
+    model = bundle["model"]
 
     x = np.array([vector_from_dict(feature_values)])
-    x_scaled = scaler.transform(x)
+    x_scaled = scaler.transform(x)[0]
 
-    explainer = get_explainer()
-    shap_values = explainer(x_scaled)
-    contributions = shap_values.values[0]  # one row, per-feature log-odds contribution
+    contributions, method = _feature_contributions(model, x_scaled)
 
     feature_importance = [
         {
@@ -72,4 +75,8 @@ def explain_prediction(feature_values: dict) -> dict:
         "clinical correlation is required."
     )
 
-    return {"feature_importance": feature_importance, "explanation_text": explanation_text}
+    return {
+        "feature_importance": feature_importance,
+        "method": method,
+        "explanation_text": explanation_text,
+    }

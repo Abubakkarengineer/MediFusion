@@ -55,7 +55,14 @@ if image_file is not None:
                 st.dataframe(df, use_container_width=True, hide_index=True)
                 st.rerun()
             except requests.exceptions.HTTPError as exc:
-                st.error(f"Analysis failed: {exc.response.text}")
+                if exc.response.status_code == 503:
+                    st.warning(
+                        "🩻 Image analysis isn't available on this deployment — the vision "
+                        "model needs more memory than this hosting tier provides. Other "
+                        "modules (Speech, OCR, Risk Prediction) are unaffected."
+                    )
+                else:
+                    st.error(f"Analysis failed: {exc.response.text}")
             except requests.exceptions.RequestException as exc:
                 st.error(f"Request failed: {exc}")
 

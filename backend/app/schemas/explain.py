@@ -17,6 +17,7 @@ class ExplanationOut(BaseModel):
     confidence: float
     model_used: str
     feature_importance: list[FeatureContribution]
+    method: str
     explanation_text: str
     causation_disclaimer: str = (
         "This explanation describes model behavior for this single prediction, "
