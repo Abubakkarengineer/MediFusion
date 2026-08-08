@@ -1,0 +1,25 @@
+{
+  "feature_names": [
+    "age",
+    "heart_rate",
+    "systolic_bp",
+    "diastolic_bp",
+    "spo2",
+    "respiratory_rate",
+    "temperature"
+  ],
+  "train_size": 3200,
+  "test_size": 800,
+  "selected_model": "LogisticRegression",
+  "comparison": {
+    "LogisticRegression": {
+      "accuracy": 0.86,
+      "auc": 0.9215
+    },
+    "RandomForest": {
+      "accuracy": 0.8588,
+      "auc": 0.9196
+    }
+  },
+  "note": "Trained on synthetic vitals data with NEWS2-inspired labeling for demonstration only. Not a validated clinical risk score."
+}
