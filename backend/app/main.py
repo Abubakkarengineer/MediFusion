@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from app.api import explain, fusion, images, meta, ocr, patients, risk, speech, staff, system
 from app.core.config import settings
@@ -34,6 +35,11 @@ def on_startup() -> None:
     finally:
         db.close()
     logger.info("%s startup complete (env=%s)", settings.app_name, settings.environment)
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 
 app.include_router(system.router, prefix="/api")
