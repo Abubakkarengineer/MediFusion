@@ -1,3 +1,4 @@
+from app.models.alert import ClinicalAlert
 from app.models.medical_image import MedicalImage
 from app.models.ocr_document import OCRDocument
 from app.models.patient import Patient
@@ -8,6 +9,7 @@ from app.models.staff import Staff
 from app.models.vital import VitalObservation
 
 __all__ = [
+    "ClinicalAlert",
     "MedicalImage",
     "OCRDocument",
     "Patient",

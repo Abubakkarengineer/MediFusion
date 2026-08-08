@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import fusion, images, meta, ocr, patients, risk, speech, staff, system
+from app.api import explain, fusion, images, meta, ocr, patients, risk, speech, staff, system
 from app.core.config import settings
 from app.core.logging_config import get_logger, setup_logging
 from app.db import SessionLocal, init_db
@@ -46,3 +46,5 @@ app.include_router(images.router, prefix="/api")
 app.include_router(fusion.router, prefix="/api")
 app.include_router(risk.router, prefix="/api")
 app.include_router(risk.ml_router, prefix="/api")
+app.include_router(explain.router, prefix="/api")
+app.include_router(explain.alerts_router, prefix="/api")
