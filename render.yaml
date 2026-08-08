@@ -1,42 +1,45 @@
 # Render Blueprint for MediFusion AI.
 # Deploy via: Render Dashboard -> New -> Blueprint -> select this repo.
 # Verify field names against Render's current docs before relying on this --
-# schema has changed over time. Manual dashboard setup (see deployment
-# guide) is the more reliable path if this blueprint doesn't apply cleanly.
+# schema has changed over time. Manual dashboard setup (see README ->
+# Deployment) is the more reliable path if this blueprint doesn't apply
+# cleanly.
+#
+# This defaults to a Free-tier-safe configuration: no Persistent Disk, so
+# MEDIFUSION_DATA_DIR / EASYOCR_MODEL_DIR / HF_HOME are intentionally left
+# unset (the app falls back to its own writable directory). If you attach a
+# Disk on a paid plan, uncomment the disk block and the three env vars
+# below it so the DB and model caches survive redeploys.
 
 services:
   - type: web
     name: medifusion-backend
-    env: python
-    plan: standard   # needs >=2GB RAM for torch+transformers+easyocr+whisper+shap; free/starter will OOM
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.11
-      - key: MEDIFUSION_DATA_DIR
-        value: /data
-      - key: EASYOCR_MODEL_DIR
-        value: /data/easyocr_models
-      - key: HF_HOME
-        value: /data/hf_cache
       - key: MEDIFUSION_JWT_SECRET
         generateValue: true
-    disk:
-      name: medifusion-data
-      mountPath: /data
-      sizeGB: 5
+      - key: WHISPER_MODEL_SIZE
+        value: tiny
+      # - key: MEDIFUSION_DATA_DIR
+      #   value: /data
+      # - key: EASYOCR_MODEL_DIR   # unused now (OCR uses Tesseract, not EasyOCR)
+      #   value: /data/easyocr_models
+      # - key: HF_HOME
+      #   value: /data/hf_cache
+    # disk:
+    #   name: medifusion-data
+    #   mountPath: /data
+    #   sizeGB: 5
 
   - type: web
     name: medifusion-frontend
-    env: python
-    plan: starter
-    rootDir: frontend
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run streamlit_app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    env: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    plan: free
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.11
       - key: MEDIFUSION_API_URL
         value: https://REPLACE-WITH-BACKEND-URL.onrender.com/api
