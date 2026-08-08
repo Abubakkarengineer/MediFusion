@@ -1,9 +1,13 @@
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
 BASE_DIR = Path(__file__).resolve().parents[3]
-DATA_DIR = BASE_DIR / "data"
+# Overridable so a deployment can point this at a mounted persistent disk
+# (e.g. Render Disks) -- otherwise the SQLite DB and uploads are wiped on
+# every redeploy since the rest of the filesystem is ephemeral.
+DATA_DIR = Path(os.environ.get("MEDIFUSION_DATA_DIR", str(BASE_DIR / "data")))
 UPLOADS_DIR = DATA_DIR / "uploads"
 SPEECH_UPLOADS_DIR = UPLOADS_DIR / "speech"
 OCR_UPLOADS_DIR = UPLOADS_DIR / "ocr"
