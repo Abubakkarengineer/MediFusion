@@ -6,6 +6,7 @@ from app.models.priority_history import PriorityHistory
 from app.models.risk_prediction import RiskPrediction
 from app.models.speech_note import SpeechNote
 from app.models.staff import Staff
+from app.models.user import User
 from app.models.vital import VitalObservation
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "RiskPrediction",
     "SpeechNote",
     "Staff",
+    "User",
     "VitalObservation",
 ]

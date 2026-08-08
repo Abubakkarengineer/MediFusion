@@ -1,8 +1,26 @@
+import re
+
 import pandas as pd
 import plotly.graph_objects as go
 import requests
 import streamlit as st
 from utils import api_get, api_post, api_put, priority_badge, render_page_header
+
+NAME_PATTERN = re.compile(r"^[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ .'-]{1,119}$")
+MOBILE_PATTERN = re.compile(r"^\d{10}$")
+
+
+def _extract_error_detail(exc: requests.exceptions.HTTPError) -> str:
+    try:
+        body = exc.response.json()
+        detail = body.get("detail")
+        if isinstance(detail, list):  # pydantic validation error list
+            return "; ".join(d.get("msg", str(d)) for d in detail)
+        if detail:
+            return str(detail)
+    except Exception:
+        pass
+    return exc.response.text
 
 st.set_page_config(page_title="Patient Management — MediFusion AI", page_icon="📋", layout="wide")
 render_page_header(
@@ -39,30 +57,44 @@ tab_register, tab_queue, tab_details = st.tabs(
 
 with tab_register:
     st.subheader("Register a new patient")
+    st.caption(
+        "Only genuine details are accepted: a real name (letters only) and a "
+        "valid 10-digit mobile number are required."
+    )
     with st.form("register_patient_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
-            full_name = st.text_input("Full name*")
+            full_name = st.text_input("Full name*", placeholder="e.g. Rahul Sharma")
             age = st.number_input("Age*", min_value=0, max_value=130, value=30)
             gender = st.selectbox("Gender*", options["genders"])
         with col2:
-            contact_number = st.text_input("Contact number")
+            contact_number = st.text_input("Mobile number* (10 digits)", placeholder="9876543210", max_chars=10)
             department = st.selectbox("Department*", options["departments"])
         chief_complaint = st.text_area("Chief complaint / reason for visit")
 
         submitted = st.form_submit_button("Register patient", type="primary")
         if submitted:
-            if not full_name.strip():
-                st.error("Full name is required.")
+            errors = []
+            cleaned_name = full_name.strip()
+            cleaned_mobile = contact_number.strip()
+
+            if not NAME_PATTERN.match(cleaned_name):
+                errors.append("Enter a real name using letters only (spaces, hyphens, apostrophes allowed).")
+            if not MOBILE_PATTERN.match(cleaned_mobile):
+                errors.append("Enter a valid 10-digit mobile number (digits only).")
+
+            if errors:
+                for e in errors:
+                    st.error(e)
             else:
                 try:
                     patient = api_post(
                         "/patients",
                         json={
-                            "full_name": full_name.strip(),
+                            "full_name": cleaned_name,
                             "age": int(age),
                             "gender": gender,
-                            "contact_number": contact_number or None,
+                            "contact_number": cleaned_mobile,
                             "chief_complaint": chief_complaint or None,
                             "department": department,
                         },
@@ -73,7 +105,7 @@ with tab_register:
                         f"Assigned nurse: {staff_label(patient['assigned_nurse'])}"
                     )
                 except requests.exceptions.HTTPError as exc:
-                    st.error(f"Registration failed: {exc.response.text}")
+                    st.error(f"Registration failed: {_extract_error_detail(exc)}")
 
 with tab_queue:
     st.subheader("Live patient queue")
