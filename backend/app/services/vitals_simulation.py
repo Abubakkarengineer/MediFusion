@@ -15,11 +15,11 @@ def _noise(value: float, spread: float) -> float:
     return value + random.uniform(-spread, spread)
 
 
-def generate_scenario(scenario: str) -> list[dict]:
+def generate_scenario(scenario: str, end_time: datetime.datetime | None = None) -> list[dict]:
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown scenario: {scenario}")
 
-    now = datetime.datetime.utcnow()
+    now = end_time or datetime.datetime.utcnow()
     readings = []
 
     for i in range(STEPS):

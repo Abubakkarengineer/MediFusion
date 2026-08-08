@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -70,11 +72,14 @@ def update_patient(patient_id: int, payload: PatientUpdate, db: Session = Depend
 
 @router.post("/{patient_id}/vitals", response_model=VitalOut, status_code=201)
 def add_vital(patient_id: int, payload: VitalCreate, db: Session = Depends(get_db)):
+    from app.services.priority_service import refresh_patient_priority
+
     _get_patient_or_404(db, patient_id)
     vital = VitalObservation(patient_id=patient_id, **payload.model_dump())
     db.add(vital)
     db.commit()
     db.refresh(vital)
+    refresh_patient_priority(db, patient_id)
     return vital
 
 
@@ -86,15 +91,38 @@ def simulate_vitals(patient_id: int, scenario: str, db: Session = Depends(get_db
     if scenario not in SCENARIOS:
         raise HTTPException(status_code=400, detail=f"scenario must be one of {SCENARIOS}")
 
-    readings = generate_scenario(scenario)
+    from app.services.priority_service import refresh_patient_priority
+    from app.services.vitals_simulation import INTERVAL_MINUTES, STEPS
+
+    # Anchor the simulated timeline's *first* (oldest) reading strictly
+    # after this patient's existing latest reading (real or simulated), so
+    # back-to-back simulation runs never produce overlapping backdated
+    # timestamps -- otherwise "latest vital" lookups can resolve to a stale
+    # reading from a prior run for most of the new batch.
+    latest_existing = db.scalars(
+        select(VitalObservation)
+        .where(VitalObservation.patient_id == patient_id)
+        .order_by(VitalObservation.recorded_at.desc())
+    ).first()
+    batch_span = datetime.timedelta(minutes=(STEPS - 1) * INTERVAL_MINUTES)
+    now = datetime.datetime.utcnow()
+    if latest_existing:
+        earliest_allowed_start = latest_existing.recorded_at + datetime.timedelta(minutes=INTERVAL_MINUTES)
+        now = max(now, earliest_allowed_start + batch_span)
+
+    readings = generate_scenario(scenario, end_time=now)  # chronological order, oldest first
     saved = []
     for reading in readings:
         vital = VitalObservation(patient_id=patient_id, source="simulated", **reading)
         db.add(vital)
-        saved.append(vital)
-    db.commit()
-    for vital in saved:
+        db.commit()
         db.refresh(vital)
+        saved.append(vital)
+        # refresh after each step (not just the final one) so the full
+        # priority trajectory (e.g. LOW -> MODERATE -> HIGH -> CRITICAL)
+        # is captured in priority_history, not just a single end-state jump.
+        refresh_patient_priority(db, patient_id)
+
     logger.info("Simulated %d vitals (%s) for patient %s", len(saved), scenario, patient_id)
     return saved
 
