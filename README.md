@@ -106,14 +106,14 @@ Frontend runs at http://127.0.0.1:8501.
 
 1. ✅ Project Foundation — FastAPI + Streamlit + SQLite/SQLAlchemy scaffold, logging, health checks
 2. ✅ Patient Management — registration, queue, details, vitals, demo staff auto-assignment
-3. ⬜ Speech AI (Whisper)
-4. ⬜ OCR (EasyOCR)
-5. ⬜ Medical Image Analysis
-6. ⬜ Vital Monitoring & Simulation
-7. ⬜ Multimodal Data Fusion
-8. ⬜ ML Risk Prediction
-9. ⬜ Dynamic Patient Prioritization
-10. ⬜ Explainable AI (SHAP) & Clinical Concern Routing
+3. ✅ Speech AI (Whisper) — multilingual transcription + symptom extraction
+4. ✅ OCR (EasyOCR) — prescription/lab report extraction with reference-range flags
+5. ✅ Medical Image Analysis — chest X-ray demo classifier with confidence scores
+6. ✅ Vital Monitoring & Simulation — manual entry + 5 scenario simulator with live charts
+7. ✅ Multimodal Data Fusion — unified patient profile across all sources
+8. ✅ ML Risk Prediction — Logistic Regression vs Random Forest, best model selected on held-out AUC
+9. ✅ Dynamic Patient Prioritization — LOW/MODERATE/HIGH/CRITICAL with full transition history
+10. ✅ Explainable AI (SHAP) & Clinical Concern Routing — feature attribution + department/specialist routing + alerts
 
 ## Future Scope
 
